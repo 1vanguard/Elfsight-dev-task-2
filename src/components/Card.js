@@ -5,6 +5,7 @@ import { ReactComponent as Genderless } from '../assets/genders/genderless.svg';
 
 // TODO: Refactor the Card component
 export function Card({
+  id,
   status,
   name,
   species,
@@ -13,8 +14,20 @@ export function Card({
   image,
   onClickHandler
 }) {
+  const handleClick = () => {
+    onClickHandler?.({
+      id,
+      name,
+      status,
+      species,
+      type,
+      gender,
+      image
+    });
+  };
+
   return (
-    <StyledCard onClick={onClickHandler}>
+    <StyledCard onClick={handleClick}>
       <CardImg src={image} alt={name} />
 
       <CardInfo>

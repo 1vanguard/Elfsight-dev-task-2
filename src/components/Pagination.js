@@ -22,7 +22,7 @@ export function Pagination() {
     });
 
     setPages(createdPages);
-  }, [info]);
+  }, [apiURL, info]);
 
   if (pages.length <= 1) return null;
 
