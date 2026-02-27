@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import styled from 'styled-components';
 import { ReactComponent as Male } from '../assets/genders/male.svg';
 import { ReactComponent as Female } from '../assets/genders/female.svg';
@@ -14,7 +15,7 @@ export function Card({
   image,
   onClickHandler
 }) {
-  const handleClick = () => {
+  const handleClick = useCallback(() => {
     onClickHandler?.({
       id,
       name,
@@ -24,7 +25,7 @@ export function Card({
       gender,
       image
     });
-  };
+  }, [id, name, status, species, type, gender, image, onClickHandler]);
 
   return (
     <StyledCard onClick={handleClick}>
