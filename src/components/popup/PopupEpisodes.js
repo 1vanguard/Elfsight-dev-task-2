@@ -11,12 +11,20 @@ export function PopupEpisodes({ episodes }) {
 
   useEffect(() => {
     if (!episodes?.length) {
+      setIsFetching(false);
+
       return;
     }
 
     setIsFetching(true);
 
     const episodesIds = episodes.map((ep) => ep.match(/\d+$/)[0]);
+
+    if (!episodesIds.length) {
+      setIsFetching(false);
+
+      return;
+    }
 
     axios
       .get(`${API_EPISODES_URL}/${episodesIds.join(',')}`)
@@ -26,6 +34,11 @@ export function PopupEpisodes({ episodes }) {
         } else {
           setSeries(data);
         }
+        setIsFetching(false);
+      })
+      .catch((error) => {
+        console.error('Failed to fetch episodes:', error);
+        setIsFetching(false);
       });
   }, [episodes]);
 
