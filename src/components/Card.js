@@ -7,25 +7,46 @@ import { ReactComponent as Genderless } from '../assets/genders/genderless.svg';
 // TODO: Refactor the Card component
 export function Card({
   id,
+  episodes,
   status,
   name,
   species,
   type,
   gender,
   image,
+  origin,
+  location,
+  episode,
   onClickHandler
 }) {
   const handleClick = useCallback(() => {
     onClickHandler?.({
       id,
+      episodes,
       name,
       status,
       species,
       type,
       gender,
-      image
+      image,
+      origin,
+      location,
+      episode
     });
-  }, [id, name, status, species, type, gender, image, onClickHandler]);
+  }, [
+    id,
+    episodes,
+    name,
+    status,
+    species,
+    type,
+    gender,
+    image,
+    origin,
+    location,
+    episode,
+    onClickHandler
+  ]);
 
   return (
     <StyledCard onClick={handleClick}>
