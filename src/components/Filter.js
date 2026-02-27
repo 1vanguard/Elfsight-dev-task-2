@@ -1,17 +1,9 @@
-import { useMemo, useCallback } from 'react';
+import { useCallback } from 'react';
 import { useData } from './providers';
 import styled from 'styled-components';
 
 export function Filter() {
-  const { apiURL, setApiURL, setActivePage, characters } = useData();
-
-  const filterOptions = useMemo(() => {
-    const status = [...new Set(characters.map((char) => char.status))].sort();
-    const gender = [...new Set(characters.map((char) => char.gender))].sort();
-    const species = [...new Set(characters.map((char) => char.species))].sort();
-
-    return { status, gender, species };
-  }, [characters]);
+  const { apiURL, setApiURL, setActivePage, filterOptions } = useData();
 
   const getFilterValue = useCallback(
     (param) => {

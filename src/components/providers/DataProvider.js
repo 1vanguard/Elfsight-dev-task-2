@@ -18,6 +18,12 @@ export function DataProvider({ children }) {
   const [info, setInfo] = useState({});
   const [apiURL, setApiURL] = useState(API_URL);
 
+  const [filterOptions, setFilterOptions] = useState({
+    status: [],
+    gender: [],
+    species: []
+  });
+
   const fetchData = useCallback(async (url) => {
     setIsFetching(true);
     setIsError(false);
@@ -28,6 +34,18 @@ export function DataProvider({ children }) {
         setIsFetching(false);
         setCharacters(data.results);
         setInfo(data.info);
+
+        setFilterOptions((prev) => ({
+          status: [
+            ...new Set([...prev.status, ...data.results.map((c) => c.status)])
+          ].sort(),
+          gender: [
+            ...new Set([...prev.gender, ...data.results.map((c) => c.gender)])
+          ].sort(),
+          species: [
+            ...new Set([...prev.species, ...data.results.map((c) => c.species)])
+          ].sort()
+        }));
       })
       .catch((e) => {
         setIsFetching(false);
@@ -50,9 +68,19 @@ export function DataProvider({ children }) {
       fetchData,
       isFetching,
       isError,
-      info
+      info,
+      filterOptions
     }),
-    [activePage, apiURL, characters, isFetching, isError, info, fetchData]
+    [
+      activePage,
+      apiURL,
+      characters,
+      isFetching,
+      isError,
+      info,
+      fetchData,
+      filterOptions
+    ]
   );
 
   return (
