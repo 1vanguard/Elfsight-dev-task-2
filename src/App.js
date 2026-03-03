@@ -9,7 +9,7 @@ import {
 } from './components';
 
 export function App() {
-  const { isFetching, isError } = useData();
+  const { isFetching, isFilterOptionsLoading, isError } = useData();
 
   return (
     <Main>
@@ -17,7 +17,7 @@ export function App() {
 
       <AppState />
 
-      {!isFetching && !isError && (
+      {!isFilterOptionsLoading && !isFetching && !isError && (
         <>
           <Filter />
 
