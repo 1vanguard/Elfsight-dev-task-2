@@ -1,49 +1,30 @@
-// src/utils/fetchFilterOptions.js
-
 const API_URL = 'https://rickandmortyapi.com/api/character/';
 const CACHE_KEY = 'filterOptions';
-const CACHE_TTL = 24 * 60 * 60 * 1000; // 24 часа
+const CACHE_TTL = 24 * 60 * 60 * 1000;
+const BASE_DELAY = 800;
 
-// 🔹 Убрали ограничение — загружаем ВСЕ страницы
-// const MAX_PAGES_FOR_FILTERS = 10; // ❌ УДАЛИТЬ
-
-// 🔹 Увеличенная задержка для защиты от 429 (было 600ms)
-const BASE_DELAY = 800; // ⬆️ 800ms между запросами
-
-/**
- * Проверяет валидность кэша
- */
 function isCacheValid(cached) {
   if (!cached?.timestamp || !cached?.options) return false;
 
   return Date.now() - cached.timestamp < CACHE_TTL;
 }
 
-/**
- * Задержка
- */
 function delay(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-/**
- * Запрос с обработкой 429 и retry
- */
 async function fetchWithRetry(url, maxRetries = 3) {
   let lastError;
   let retryDelay = BASE_DELAY;
 
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
-      console.log(`📡 Request ${attempt}/${maxRetries}: ${url}`);
-
       const response = await fetch(url, {
         method: 'GET',
         headers: { Accept: 'application/json' },
         signal: AbortSignal.timeout(15000)
       });
 
-      // 🔹 Обработка 429 Too Many Requests
       if (response.status === 429) {
         const retryAfter = response.headers.get('Retry-After');
         const waitTime = retryAfter ? parseInt(retryAfter) * 1000 : retryDelay;
@@ -84,18 +65,13 @@ async function fetchWithRetry(url, maxRetries = 3) {
   throw lastError || new Error('Request failed after all retries');
 }
 
-/**
- * Собирает ВСЕ уникальные значения фильтров из API (все 42 страницы)
- */
-export async function fetchFilterOptionsFromAPI(onProgress) {
+async function fetchFilterOptionsFromAPI(onProgress) {
   const allStatus = new Set();
   const allGender = new Set();
   const allSpecies = new Set();
 
   let page = 1;
-  let totalPages = 42; // 🔹 Фиксируем 42 страницы
-
-  console.log(`📊 Starting to load ALL ${totalPages} pages...`);
+  let totalPages = 42;
 
   while (page <= totalPages) {
     try {
@@ -107,43 +83,23 @@ export async function fetchFilterOptionsFromAPI(onProgress) {
         if (char?.species) allSpecies.add(char.species);
       });
 
-      // 🔹 Обновляем totalPages из API (на случай изменений)
       if (data.info?.pages) {
         totalPages = data.info.pages;
       }
 
-      // 🔹 Лог каждые 5 страниц, чтобы не спамить
-      if (page % 5 === 0 || page === totalPages) {
-        console.log(
-          `📄 Page ${page}/${totalPages} loaded (${Math.round(
-            (page / totalPages) * 100
-          )}%)`
-        );
-      }
-
-      // 🔹 Прогресс для UI
       if (onProgress) {
         onProgress({ current: page, total: totalPages });
       }
 
-      // 🔹 Пауза между запросами (защита от 429)
       await delay(BASE_DELAY);
 
       page++;
     } catch (error) {
       console.warn(`⚠️ Page ${page} failed: ${error.message}`);
 
-      // 🔹 При ошибке всё равно идём дальше (не прерываем)
       page++;
     }
   }
-
-  console.log(`✅ All ${totalPages} pages loaded!`);
-  console.log('📊 Collected:', {
-    status: allStatus.size,
-    gender: allGender.size,
-    species: allSpecies.size
-  });
 
   return {
     status: [...allStatus].sort(),
@@ -152,21 +108,14 @@ export async function fetchFilterOptionsFromAPI(onProgress) {
   };
 }
 
-/**
- * Загружает опции: кэш → API
- */
 export async function loadFilterOptions() {
-  // 🔹 Проверяем кэш
   try {
     const cached = localStorage.getItem(CACHE_KEY);
     if (cached) {
       const parsed = JSON.parse(cached);
       if (isCacheValid(parsed)) {
-        console.log('✅ Filter options loaded from cache');
-
         return parsed.options;
       } else {
-        console.log('🔄 Cache expired, fetching ALL pages from API...');
         localStorage.removeItem(CACHE_KEY);
       }
     }
@@ -175,14 +124,9 @@ export async function loadFilterOptions() {
     localStorage.removeItem(CACHE_KEY);
   }
 
-  // 🔹 Загружаем ВСЕ страницы из API
-  console.log('🌐 Fetching filter options from ALL pages...');
-  console.log('⏱️ This may take 30-60 seconds...');
-
   try {
     const options = await fetchFilterOptionsFromAPI();
 
-    // 🔹 Сохраняем в кэш с timestamp
     localStorage.setItem(
       CACHE_KEY,
       JSON.stringify({
@@ -191,17 +135,10 @@ export async function loadFilterOptions() {
       })
     );
 
-    console.log('✅ Filter options cached:', {
-      status: options.status.length,
-      gender: options.gender.length,
-      species: options.species.length
-    });
-
     return options;
   } catch (e) {
     console.error('❌ Failed to fetch filter options:', e);
 
-    // 🔹 Фолбэк на расширенный набор (на случай полной неудачи)
     return {
       status: ['Alive', 'Dead', 'unknown'],
       gender: ['Male', 'Female', 'Genderless', 'unknown'],

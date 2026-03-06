@@ -10,7 +10,7 @@ export function Pagination() {
     (index) => {
       window.scrollTo({ top: 0, behavior: 'smooth' });
       setActivePage(index);
-      setApiURL(pages[index]);
+      setApiURL(pages[index]); // ✅ Теперь pages[index] — это строка
     },
     [pages, setActivePage, setApiURL]
   );
@@ -26,12 +26,10 @@ export function Pagination() {
   useEffect(() => {
     const createdPages = Array.from({ length: info.pages }, (_, i) => {
       const URLWithPage = new URL(apiURL);
-
       URLWithPage.searchParams.set('page', i + 1);
 
-      return URLWithPage;
+      return URLWithPage.toString(); // ✅ Конвертируем в строку здесь
     });
-
     setPages(createdPages);
   }, [apiURL, info]);
 
@@ -49,7 +47,6 @@ export function Pagination() {
               <Ellipsis>...</Ellipsis>
             </>
           )}
-
           <Page data-page-index={activePage - 1} onClick={handlePageClick}>
             {activePage}
           </Page>
@@ -63,7 +60,6 @@ export function Pagination() {
           <Page data-page-index={activePage + 1} onClick={handlePageClick}>
             {activePage + 2}
           </Page>
-
           {activePage + 1 !== pages.length - 1 && (
             <>
               <Ellipsis>...</Ellipsis>
@@ -80,6 +76,8 @@ export function Pagination() {
     </StyledPagination>
   );
 }
+
+// ... стили без изменений ...
 
 const StyledPagination = styled.div`
   width: 100%;

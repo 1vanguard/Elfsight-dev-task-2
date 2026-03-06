@@ -29,23 +29,21 @@ export function DataProvider({ children }) {
   });
   const [isFilterOptionsLoading, setIsFilterOptionsLoading] = useState(true);
 
-  // ✅ Загрузка опций фильтров с кэшированием + статус загрузки
   useEffect(() => {
-    let isMounted = true; // 🔹 Защита от обновления размонтированного компонента
+    let isMounted = true;
 
     const loadOptions = async () => {
       try {
-        const options = await loadFilterOptions(); // из utils/fetchFilterOptions.js
+        const options = await loadFilterOptions();
 
         if (isMounted) {
           setFilterOptions(options);
-          setIsFilterOptionsLoading(false); // ✅ Загрузка завершена
+          setIsFilterOptionsLoading(false);
         }
       } catch (e) {
         console.error('❌ Failed to load filter options:', e);
 
         if (isMounted) {
-          // 🔹 Фолбэк на минимальный набор
           setFilterOptions({
             status: ['Alive', 'Dead', 'unknown'],
             gender: ['Male', 'Female', 'Genderless', 'unknown'],
@@ -58,13 +56,11 @@ export function DataProvider({ children }) {
 
     loadOptions();
 
-    // 🔹 Cleanup при размонтировании
     return () => {
       isMounted = false;
     };
   }, []);
 
-  // ✅ Синхронизация с URL при старте
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const status = params.get('status');
@@ -85,12 +81,17 @@ export function DataProvider({ children }) {
   }, []);
 
   const fetchData = useCallback(async (url) => {
-    // ✅ Сброс всех флагов перед новым запросом
+    if (typeof url !== 'string') {
+      console.error('❌ fetchData received non-string URL:', url);
+      setIsError(true);
+      setIsFetching(false);
+
+      return;
+    }
+
     setIsRateLimited(false);
     setIsError(false);
     setIsFetching(true);
-
-    console.log('🔄 Fetching data:', url);
 
     try {
       const { data } = await axios.get(url.trim(), {
@@ -99,9 +100,7 @@ export function DataProvider({ children }) {
         validateStatus: (status) => status === 200
       });
 
-      // Обработка 404 (пустой результат)
       if (data?.error) {
-        console.log('📭 No results found:', url);
         setCharacters([]);
         setInfo({ count: 0, pages: 0, next: null, prev: null });
         setIsFetching(false);
@@ -109,33 +108,28 @@ export function DataProvider({ children }) {
         return;
       }
 
-      // Валидация успешного ответа
       if (!data?.results || !Array.isArray(data.results)) {
         throw new Error('Invalid API response format');
       }
 
-      console.log('✅ Data loaded:', data.results.length, 'characters');
       setCharacters(data.results);
       setInfo(data.info);
       setIsFetching(false);
     } catch (e) {
-      // Обработка 429
       if (e.response?.status === 429) {
         console.warn('⚠️ 429 Too Many Requests');
 
         const retryCount = e.config?.__429RetryCount || 0;
 
         if (retryCount < MAX_429_RETRIES) {
-          console.log(`⏳ Waiting ${RETRY_DELAY}ms before retry...`);
           await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY));
           e.config.__429RetryCount = retryCount + 1;
-          fetchData(url); // Рекурсивный retry
+          fetchData(url);
 
           return;
         } else {
-          // Финальный 429
           console.error('❌ 429 after all retries');
-          setIsRateLimited(true); // 🔹 Ставим флаг
+          setIsRateLimited(true);
           setIsError(true);
           setIsFetching(false);
 
@@ -143,14 +137,12 @@ export function DataProvider({ children }) {
         }
       }
 
-      // Другие ошибки
       console.error('❌ Fetch error:', e.message);
       setIsError(true);
       setIsFetching(false);
     }
-  }, []); // ✅ Пустой массив зависимостей
+  }, []);
 
-  // ✅ Вызываем загрузку при изменении apiURL
   useEffect(() => {
     fetchData(apiURL);
   }, [apiURL, fetchData]);

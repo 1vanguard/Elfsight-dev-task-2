@@ -10,10 +10,8 @@ const defaultPopupSettings = {
   content: {}
 };
 
-const BASE_URL = 'https://rickandmortyapi.com/api/character/';
-
 export function ItemsGrid() {
-  const { characters, setApiURL, setActivePage } = useData();
+  const { characters } = useData();
   const [popupSettings, setPopupSettings] = useState(defaultPopupSettings);
 
   const cardOnClickHandler = useCallback(

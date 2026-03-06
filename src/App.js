@@ -1,12 +1,5 @@
 import styled from 'styled-components';
-import {
-  Pagination,
-  ItemsGrid,
-  useData,
-  Header,
-  AppState,
-  Filter
-} from './components';
+import { Pagination, ItemsGrid, useData, Header, AppState } from './components';
 
 export function App() {
   const { isFetching, isFilterOptionsLoading, isError } = useData();
@@ -19,8 +12,6 @@ export function App() {
 
       {!isFilterOptionsLoading && !isFetching && !isError && (
         <>
-          <Filter />
-
           <ItemsGrid />
 
           <Pagination />

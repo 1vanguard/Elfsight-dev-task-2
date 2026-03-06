@@ -1,28 +1,27 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useData } from './providers';
+import { Select } from './common/Select';
 import styled from 'styled-components';
 
-// ✅ ВАЖНО: Константа должна быть в этом файле!
 const BASE_URL = 'https://rickandmortyapi.com/api/character/';
 
 export function Filter() {
   const { apiURL, setApiURL, setActivePage, filterOptions } = useData();
 
   const [localFilters, setLocalFilters] = useState({
-    name: '',
-    type: '',
+    characterName: '',
+    characterType: '',
     status: '',
     gender: '',
     species: ''
   });
 
-  // Читаем фильтры из URL при старте
   useEffect(() => {
     try {
       const params = new URLSearchParams(window.location.search);
       setLocalFilters({
-        name: params.get('name') || '',
-        type: params.get('type') || '',
+        characterName: params.get('name') || '',
+        characterType: params.get('type') || '',
         status: params.get('status') || '',
         gender: params.get('gender') || '',
         species: params.get('species') || ''
@@ -32,13 +31,12 @@ export function Filter() {
     }
   }, []);
 
-  // Синхронизация при изменении apiURL извне
   useEffect(() => {
     try {
       const params = new URLSearchParams(new URL(apiURL).search);
       setLocalFilters({
-        name: params.get('name') || '',
-        type: params.get('type') || '',
+        characterName: params.get('name') || '',
+        characterType: params.get('type') || '',
         status: params.get('status') || '',
         gender: params.get('gender') || '',
         species: params.get('species') || ''
@@ -56,16 +54,14 @@ export function Filter() {
     }));
   }, []);
 
-  // ✅ Кнопка Apply — с try/catch и отладкой
   const handleApply = useCallback(() => {
     try {
-      console.log('🎯 Apply clicked, filters:', localFilters);
-
-      // 🔹 Строим объект URL для работы с параметрами
       const url = new URL(BASE_URL);
 
-      if (localFilters.name) url.searchParams.set('name', localFilters.name);
-      if (localFilters.type) url.searchParams.set('type', localFilters.type);
+      if (localFilters.characterName)
+        url.searchParams.set('name', localFilters.characterName);
+      if (localFilters.characterType)
+        url.searchParams.set('type', localFilters.characterType);
       if (localFilters.status)
         url.searchParams.set('status', localFilters.status);
       if (localFilters.gender)
@@ -73,20 +69,14 @@ export function Filter() {
       if (localFilters.species)
         url.searchParams.set('species', localFilters.species);
 
-      const queryString = url.search; // ✅ Только "?name=Rick&status=Alive"
-      const browserURL = `/${queryString}`; // ✅ "/?name=Rick&status=Alive"
+      const queryString = url.search;
+      const browserURL = `/${queryString}`;
 
-      console.log('🔗 Query string:', queryString);
-      console.log('🔗 Browser URL:', browserURL);
-
-      // 🔹 Обновляем контекст ПОЛНЫМ URL API
-      setApiURL(url.toString()); // ✅ https://rickandmortyapi.com/...
+      setApiURL(url.toString());
       setActivePage(0);
 
-      // 🔹 Обновляем URL БРАУЗЕРА только query-параметрами
       if (window.history?.pushState) {
-        window.history.pushState({}, '', browserURL); // ✅ localhost:3000/?name=Rick
-        console.log('✅ Browser URL updated');
+        window.history.pushState({}, '', browserURL);
       }
     } catch (e) {
       console.error('❌ ERROR in handleApply:', {
@@ -97,12 +87,11 @@ export function Filter() {
     }
   }, [localFilters, setApiURL, setActivePage]);
 
-  // ✅ Кнопка Reset
   const handleReset = useCallback(() => {
     try {
       const defaultFilters = {
-        name: '',
-        type: '',
+        characterName: '',
+        characterType: '',
         status: '',
         gender: '',
         species: ''
@@ -112,11 +101,9 @@ export function Filter() {
       setApiURL(BASE_URL);
       setActivePage(0);
 
-      // ✅ Сбрасываем URL браузера на корень
       if (window.history?.pushState) {
         window.history.pushState({}, '', '/');
       }
-      console.log('✅ Filters reset, URL: /');
     } catch (e) {
       console.error('❌ ERROR in handleReset:', e.message);
       alert(`Reset error: ${e.message}`);
@@ -125,59 +112,63 @@ export function Filter() {
 
   const hasActiveFilters = Object.values(localFilters).some((v) => v !== '');
 
+  const statusOptions =
+    filterOptions?.status?.map((opt) => ({
+      value: opt,
+      label: opt
+    })) || [];
+
+  const genderOptions =
+    filterOptions?.gender?.map((opt) => ({
+      value: opt,
+      label: opt
+    })) || [];
+
+  const speciesOptions =
+    filterOptions?.species?.map((opt) => ({
+      value: opt,
+      label: opt
+    })) || [];
+
   return (
     <FilterContainer>
-      <TextInput
-        name="name"
-        value={localFilters.name}
-        onChange={handleInputChange}
-        placeholder="Name"
-      />
-      <TextInput
-        name="type"
-        value={localFilters.type}
-        onChange={handleInputChange}
-        placeholder="Type"
-      />
-
-      <FilterSelect
+      <Select
         name="status"
         value={localFilters.status}
         onChange={handleInputChange}
-      >
-        <option value="">All Status</option>
-        {filterOptions?.status?.map((opt) => (
-          <option key={opt} value={opt}>
-            {opt}
-          </option>
-        ))}
-      </FilterSelect>
+        options={[{ value: '', label: 'All Status' }, ...statusOptions]}
+        placeholder="All Status"
+      />
 
-      <FilterSelect
+      <Select
         name="gender"
         value={localFilters.gender}
         onChange={handleInputChange}
-      >
-        <option value="">All Gender</option>
-        {filterOptions?.gender?.map((opt) => (
-          <option key={opt} value={opt}>
-            {opt}
-          </option>
-        ))}
-      </FilterSelect>
+        options={[{ value: '', label: 'All Gender' }, ...genderOptions]}
+        placeholder="All Gender"
+      />
 
-      <FilterSelect
+      <Select
         name="species"
         value={localFilters.species}
         onChange={handleInputChange}
-      >
-        <option value="">All Species</option>
-        {filterOptions?.species?.map((opt) => (
-          <option key={opt} value={opt}>
-            {opt}
-          </option>
-        ))}
-      </FilterSelect>
+        options={[{ value: '', label: 'All Species' }, ...speciesOptions]}
+        placeholder="All Species"
+      />
+
+      <TextInput
+        name="characterName"
+        value={localFilters.characterName}
+        onChange={handleInputChange}
+        placeholder="Name"
+      />
+
+      <TextInput
+        name="characterType"
+        value={localFilters.characterType}
+        onChange={handleInputChange}
+        placeholder="Type"
+      />
 
       <ButtonGroup>
         <ApplyButton onClick={handleApply}>Apply</ApplyButton>
@@ -192,17 +183,32 @@ export function Filter() {
 const ButtonGroup = styled.div`
   display: flex;
   gap: 10px;
-  margin-left: auto;
+
+  & > * {
+    flex: 1;
+  }
 `;
 const FilterContainer = styled.div`
-  display: flex;
-  gap: 15px;
-  flex-wrap: wrap;
   align-items: center;
-  padding: 20px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  max-width: 561px;
+
+  & > * {
+    flex: 1;
+    max-width: calc(33.3% - 10px);
+    min-width: 180px;
+  }
 
   @media (max-width: 1520px) {
-    flex-wrap: nowrap;
+    max-width: 482px;
+
+    & > * {
+      max-width: calc(33.3% - 10px);
+      min-width: 150px;
+    }
   }
 
   @media (max-width: 950px) {
@@ -211,7 +217,13 @@ const FilterContainer = styled.div`
 
   @media (max-width: 530px) {
     flex-direction: column;
-    align-items: stretch;
+    max-width: 240px;
+
+    & > * {
+      max-width: 100%;
+      min-width: 100%;
+      width: 100%;
+    }
 
     ${ButtonGroup} {
       flex-direction: column;
@@ -219,61 +231,46 @@ const FilterContainer = styled.div`
   }
 `;
 const TextInput = styled.input`
-  padding: 10px 15px;
+  background: #1a1f3a;
   border-radius: 8px;
   border: 1px solid #83bf46;
-  background: #1a1f3a;
   color: #fff;
+  display: block;
   font-size: 14px;
-  min-width: 150px;
+  padding: 10px 15px;
+  width: 100%;
   outline: none;
-  transition: all 0.2s;
+  transition: all 0.2s ease;
 
   &::placeholder {
     color: #718096;
+    opacity: 1;
   }
 
   &:hover {
+    background: #252b4a;
     border-color: #4a5568;
   }
 
   &:focus {
+    background: #252b4a;
     border-color: #83bf46;
     box-shadow: 0 0 0 2px rgba(131, 191, 70, 0.2);
   }
-`;
 
-const FilterSelect = styled.select`
-  padding: 10px 15px;
-  border-radius: 8px;
-  border: 1px solid #83bf46;
-  background: #1a1f3a;
-  color: #fff;
-  font-size: 14px;
-  cursor: pointer;
-  min-width: 150px;
-  outline: none;
-  appearance: none;
-  background-image: url('data:image/svg+xml,...');
-  background-repeat: no-repeat;
-  background-position: right 10px center;
-  background-size: 12px;
+  text-overflow: ellipsis;
 
-  &:hover {
-    border-color: #4a5568;
+  &:-ms-input-placeholder {
+    color: #718096;
   }
 
-  &:focus {
-    border-color: #83bf46;
-  }
-
-  option {
-    background: #1a1f3a;
-    color: #fff;
+  &::-ms-input-placeholder {
+    color: #718096;
   }
 `;
+
 const ApplyButton = styled.button`
-  padding: 10px 24px;
+  padding: 10px;
   border-radius: 8px;
   border: 1px solid #83bf46;
   background: transparent;
@@ -290,7 +287,7 @@ const ApplyButton = styled.button`
 `;
 
 const ResetButton = styled.button`
-  padding: 10px 24px;
+  padding: 10px;
   border-radius: 8px;
   border: 1px solid #e53e3e;
   background: transparent;
@@ -308,8 +305,6 @@ const ResetButton = styled.button`
   &:disabled {
     opacity: 0.5;
     cursor: not-allowed;
-    border-color: #4a5568;
-    color: #4a5568;
 
     &:hover {
       background: transparent;

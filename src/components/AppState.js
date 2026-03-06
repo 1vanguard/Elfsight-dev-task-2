@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import styled from 'styled-components';
 import { Loader, Text, ResetButton } from './common';
 import { useData } from './providers';
@@ -10,17 +11,15 @@ export function AppState() {
     isRateLimited
   } = useData();
 
+  const handleReloadPage = useCallback(() => {
+    window.location.reload();
+  }, []);
+
   if (isRateLimited) {
     return (
       <AppStateContainer>
         <Text>Too many requests. Please wait a moment.</Text>
-        <ResetButton
-          text="Reload Page"
-          onClick={() => {
-            alert('rrr');
-            window.location.reload();
-          }}
-        />
+        <ResetButton text="Reload Page" onClick={handleReloadPage} />
       </AppStateContainer>
     );
   }
