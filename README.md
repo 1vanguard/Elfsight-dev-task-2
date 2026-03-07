@@ -13,7 +13,7 @@ Application for searching and filtering characters from the Rick and Morty API.
 
 ```bash
 # Clone the repository
-git clone <repository-url>
+git clone https://github.com/1vanguard/Elfsight-dev-task-2.git
 
 # Navigate to the project folder
 cd Elfsight-dev-task-2
