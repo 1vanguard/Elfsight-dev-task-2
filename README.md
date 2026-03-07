@@ -21,6 +21,7 @@ cd Elfsight-dev-task-2
 # Install dependencies
 npm install
 
+```bash
 
 ### 3. Run
 
