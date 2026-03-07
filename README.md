@@ -20,11 +20,13 @@ cd Elfsight-dev-task-2
 
 # Install dependencies
 npm install
-
-```bash
+```
 
 ### 3. Run
 
 ```bash
 # Start the development server
 npm start
+```
+
+The application will open in your browser: http://localhost:3000
